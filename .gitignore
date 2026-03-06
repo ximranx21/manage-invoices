@@ -1,0 +1,19 @@
+# dependencies
+invoice-app/node_modules/
+node_modules/
+
+# Next.js
+invoice-app/.next/
+invoice-app/out/
+
+# env files
+invoice-app/.env
+invoice-app/.env.local
+invoice-app/.env*.local
+.env
+.env.local
+
+# misc
+.DS_Store
+*.pem
+invoice-app/.vercel

@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Manager</title>
+  <style>
+    :root {
+      --bg: #f5f7fa;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #1a202c;
+      --text-secondary: #64748b;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --unpaid: #f59e0b;
+      --unpaid-bg: #fef3c7;
+      --paid: #10b981;
+      --paid-bg: #d1fae5;
+      --delayed: #ef4444;
+      --delayed-bg: #fee2e2;
+      --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+      --radius: 8px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      box-shadow: var(--shadow);
+    }
+    .header h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .header h1 span { color: var(--primary); }
+
+    /* Navigation */
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+    nav button {
+      background: none;
+      border: none;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    nav button:hover { background: var(--bg); color: var(--text); }
+    nav button.active { background: var(--primary); color: #fff; }
+
+    /* Main container */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    /* Dashboard cards */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--border);
+    }
+    .stat-card.total { border-left-color: var(--primary); }
+    .stat-card.unpaid { border-left-color: var(--unpaid); }
+    .stat-card.paid { border-left-color: var(--paid); }
+    .stat-card.delayed { border-left-color: var(--delayed); }
+    .stat-card .label {
+      font-size: 13px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+    .stat-card .value {
+      font-size: 28px;
+      font-weight: 700;
+      margin-top: 4px;
+    }
+    .stat-card .amount {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .search-box {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      width: 240px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .search-box:focus { border-color: var(--primary); }
+
+    .filter-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+    .btn {
+      padding: 8px 18px;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.15s;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--border); }
+    .btn-danger {
+      background: #fee2e2;
+      color: var(--delayed);
+    }
+    .btn-danger:hover { background: #fecaca; }
+    .btn-success {
+      background: #d1fae5;
+      color: #059669;
+    }
+    .btn-success:hover { background: #a7f3d0; }
+    .btn-warning {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    .btn-warning:hover { background: #fde68a; }
+
+    /* Table */
+    .table-wrapper {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      font-weight: 600;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 14px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8fafc; }
+    tr { cursor: pointer; transition: background 0.1s; }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    .badge-unpaid { background: var(--unpaid-bg); color: #b45309; }
+    .badge-paid { background: var(--paid-bg); color: #047857; }
+    .badge-delayed { background: var(--delayed-bg); color: #dc2626; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-secondary);
+    }
+    .empty-state .icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+    .empty-state p { font-size: 15px; }
+
+    /* Modal / Form */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      animation: fadeIn 0.15s;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+      animation: slideUp 0.2s;
+    }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } }
+
+    .modal-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-header h2 { font-size: 18px; font-weight: 700; }
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      padding: 4px;
+    }
+    .modal-close:hover { color: var(--text); }
+
+    .modal-body { padding: 24px; }
+
+    .form-group { margin-bottom: 18px; }
+    .form-group label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+    }
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Detail view */
+    .detail-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .detail-title { font-size: 24px; font-weight: 700; }
+    .detail-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .detail-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+    .detail-card h3 {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      font-weight: 600;
+    }
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+    .detail-field .label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .detail-field .value {
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    .items-table { margin-top: 12px; }
+    .items-table th { background: var(--bg); }
+    .items-table td { font-size: 13px; }
+
+    .back-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .back-btn:hover { text-decoration: underline; }
+
+    /* Line items in form */
+    .line-items { margin-top: 8px; }
+    .line-item-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .line-item-row input {
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 13px;
+      outline: none;
+    }
+    .line-item-row input:focus { border-color: var(--primary); }
+    .remove-item {
+      background: none;
+      border: none;
+      color: var(--delayed);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px 8px;
+    }
+    .remove-item:hover { background: var(--delayed-bg); border-radius: 4px; }
+    .add-item-btn {
+      background: none;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 8px;
+      width: 100%;
+      cursor: pointer;
+      color: var(--primary);
+      font-size: 13px;
+      font-weight: 500;
+      margin-top: 4px;
+    }
+    .add-item-btn:hover { border-color: var(--primary); background: #eff6ff; }
+
+    /* Confirm dialog */
+    .confirm-body { text-align: center; padding: 20px; }
+    .confirm-body p { font-size: 15px; color: var(--text-secondary); margin-bottom: 20px; }
+    .confirm-actions { display: flex; gap: 8px; justify-content: center; }
+
+    /* Sort header */
+    th.sortable { cursor: pointer; user-select: none; }
+    th.sortable:hover { color: var(--primary); }
+    th.sortable .sort-arrow { margin-left: 4px; font-size: 10px; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container { padding: 16px; }
+      .stats { grid-template-columns: 1fr 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .search-box { width: 100%; }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left { flex-direction: column; }
+      .line-item-row { grid-template-columns: 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+      table { font-size: 13px; }
+      td, th { padding: 10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app"></div>
+
+<script>
+// ── Data Layer ──────────────────────────────────────────
+const STORAGE_KEY = 'invoice_manager_data';
+
+function generateId() {
+  return 'INV-' + Date.now().toString(36).toUpperCase() + Math.random().toString(36).substring(2, 5).toUpperCase();
+}
+
+function loadInvoices() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveInvoices(invoices) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
+}
+
+function getSeedData() {
+  const today = new Date();
+  const d = (offset) => {
+    const dt = new Date(today);
+    dt.setDate(dt.getDate() + offset);
+    return dt.toISOString().split('T')[0];
+  };
+  return [
+    {
+      id: 'INV-001', client: 'Acme Corp', email: 'billing@acme.com',
+      date: d(-30), dueDate: d(-5), status: 'delayed',
+      items: [{ description: 'Web Development', quantity: 40, price: 120 }, { description: 'Hosting (Annual)', quantity: 1, price: 480 }],
+      notes: 'Payment overdue. Follow up required.'
+    },
+    {
+      id: 'INV-002', client: 'TechStart Inc', email: 'accounts@techstart.io',
+      date: d(-20), dueDate: d(10), status: 'unpaid',
+      items: [{ description: 'UI/UX Design', quantity: 25, price: 95 }, { description: 'Prototyping', quantity: 10, price: 95 }],
+      notes: ''
+    },
+    {
+      id: 'INV-003', client: 'Global Foods LLC', email: 'finance@globalfoods.com',
+      date: d(-45), dueDate: d(-15), status: 'paid',
+      items: [{ description: 'POS System Setup', quantity: 1, price: 2500 }, { description: 'Staff Training', quantity: 8, price: 150 }, { description: 'Monthly Support', quantity: 3, price: 300 }],
+      notes: 'Paid in full via wire transfer.'
+    },
+    {
+      id: 'INV-004', client: 'Downtown Bistro', email: 'owner@downtownbistro.com',
+      date: d(-10), dueDate: d(20), status: 'unpaid',
+      items: [{ description: 'Menu Design', quantity: 1, price: 800 }, { description: 'Photography', quantity: 1, price: 600 }],
+      notes: 'New client. Net 30 terms.'
+    },
+    {
+      id: 'INV-005', client: 'Summit Marketing', email: 'ap@summitmktg.com',
+      date: d(-60), dueDate: d(-30), status: 'paid',
+      items: [{ description: 'SEO Audit', quantity: 1, price: 1500 }, { description: 'Content Writing', quantity: 12, price: 200 }],
+      notes: 'Paid early.'
+    },
+    {
+      id: 'INV-006', client: 'Rivera Catering', email: 'maria@riveracatering.com',
+      date: d(-15), dueDate: d(-2), status: 'delayed',
+      items: [{ description: 'Branding Package', quantity: 1, price: 3200 }],
+      notes: 'Sent second reminder.'
+    }
+  ];
+}
+
+// ── State ───────────────────────────────────────────────
+let state = {
+  invoices: loadInvoices(),
+  view: 'dashboard',        // dashboard | list | detail
+  filter: 'all',            // all | unpaid | paid | delayed
+  search: '',
+  sortField: 'date',
+  sortDir: 'desc',
+  selectedId: null,
+  modal: null,               // null | 'create' | 'edit' | 'delete'
+  editingInvoice: null,
+};
+
+if (state.invoices.length === 0) {
+  state.invoices = getSeedData();
+  saveInvoices(state.invoices);
+}
+
+// ── Helpers ─────────────────────────────────────────────
+function fmt(amount) {
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+}
+
+function invoiceTotal(inv) {
+  return inv.items.reduce((sum, it) => sum + (it.quantity * it.price), 0);
+}
+
+function fmtDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
+function getFiltered() {
+  let list = [...state.invoices];
+  if (state.filter !== 'all') list = list.filter(i => i.status === state.filter);
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    list = list.filter(i =>
+      i.id.toLowerCase().includes(q) ||
+      i.client.toLowerCase().includes(q) ||
+      i.email.toLowerCase().includes(q)
+    );
+  }
+  list.sort((a, b) => {
+    let va = a[state.sortField], vb = b[state.sortField];
+    if (state.sortField === 'amount') { va = invoiceTotal(a); vb = invoiceTotal(b); }
+    if (va < vb) return state.sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return state.sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+  return list;
+}
+
+function getStats() {
+  const all = state.invoices;
+  const s = { total: all.length, unpaid: 0, paid: 0, delayed: 0, totalAmount: 0, unpaidAmount: 0, paidAmount: 0, delayedAmount: 0 };
+  all.forEach(inv => {
+    const t = invoiceTotal(inv);
+    s.totalAmount += t;
+    s[inv.status]++;
+    s[inv.status + 'Amount'] += t;
+  });
+  return s;
+}
+
+// ── Render ──────────────────────────────────────────────
+function render() {
+  const app = document.getElementById('app');
+  app.innerHTML = renderHeader() + '<div class="container">' + renderView() + '</div>' + renderModal();
+  bindEvents();
+}
+
+function renderHeader() {
+  return `
+    <div class="header">
+      <h1><span>Invoice</span> Manager</h1>
+      <nav>
+        <button class="${state.view === 'dashboard' ? 'active' : ''}" data-nav="dashboard">Dashboard</button>
+        <button class="${state.view === 'list' ? 'active' : ''}" data-nav="list">Invoices</button>
+      </nav>
+    </div>`;
+}
+
+function renderView() {
+  if (state.view === 'detail') return renderDetail();
+  if (state.view === 'list') return renderList();
+  return renderDashboard();
+}
+
+// ── Dashboard ───────────────────────────────────────────
+function renderDashboard() {
+  const s = getStats();
+  return `
+    <div class="stats">
+      <div class="stat-card total">
+        <div class="label">Total Invoices</div>
+        <div class="value">${s.total}</div>
+        <div class="amount">${fmt(s.totalAmount)}</div>
+      </div>
+      <div class="stat-card unpaid">
+        <div class="label">Unpaid</div>
+        <div class="value">${s.unpaid}</div>
+        <div class="amount">${fmt(s.unpaidAmount)}</div>
+      </div>
+      <div class="stat-card paid">
+        <div class="label">Paid</div>
+        <div class="value">${s.paid}</div>
+        <div class="amount">${fmt(s.paidAmount)}</div>
+      </div>
+      <div class="stat-card delayed">
+        <div class="label">Delayed</div>
+        <div class="value">${s.delayed}</div>
+        <div class="amount">${fmt(s.delayedAmount)}</div>
+      </div>
+    </div>
+    <h2 style="font-size:18px;margin-bottom:12px;">Recent Invoices</h2>
+    ${renderInvoiceTable(state.invoices.slice().sort((a,b) => b.date > a.date ? 1 : -1).slice(0,5))}
+  `;
+}
+
+// ── Invoice List ────────────────────────────────────────
+function renderList() {
+  const filtered = getFiltered();
+  return `
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-box" type="text" placeholder="Search invoices..." value="${state.search}" data-action="search" />
+        <button class="filter-btn ${state.filter === 'all' ? 'active' : ''}" data-filter="all">All</button>
+        <button class="filter-btn ${state.filter === 'unpaid' ? 'active' : ''}" data-filter="unpaid">Unpaid</button>
+        <button class="filter-btn ${state.filter === 'paid' ? 'active' : ''}" data-filter="paid">Paid</button>
+        <button class="filter-btn ${state.filter === 'delayed' ? 'active' : ''}" data-filter="delayed">Delayed</button>
+      </div>
+      <button class="btn btn-primary" data-action="create">+ New Invoice</button>
+    </div>
+    ${filtered.length ? renderInvoiceTable(filtered) : '<div class="empty-state"><div class="icon">&#128196;</div><p>No invoices found</p></div>'}
+  `;
+}
+
+function sortArrow(field) {
+  if (state.sortField !== field) return '';
+  return `<span class="sort-arrow">${state.sortDir === 'asc' ? '&#9650;' : '&#9660;'}</span>`;
+}
+
+function renderInvoiceTable(invoices) {
+  return `
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="id">Invoice ${sortArrow('id')}</th>
+            <th class="sortable" data-sort="client">Client ${sortArrow('client')}</th>
+            <th class="sortable" data-sort="date">Date ${sortArrow('date')}</th>
+            <th class="sortable" data-sort="dueDate">Due Date ${sortArrow('dueDate')}</th>
+            <th class="sortable" data-sort="amount">Amount ${sortArrow('amount')}</th>
+            <th class="sortable" data-sort="status">Status ${sortArrow('status')}</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${invoices.map(inv => `
+            <tr data-id="${inv.id}">
+              <td><strong>${inv.id}</strong></td>
+              <td>${inv.client}</td>
+              <td>${fmtDate(inv.date)}</td>
+              <td>${fmtDate(inv.dueDate)}</td>
+              <td><strong>${fmt(invoiceTotal(inv))}</strong></td>
+              <td><span class="badge badge-${inv.status}">${inv.status}</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ── Detail View ─────────────────────────────────────────
+function renderDetail() {
+  const inv = state.invoices.find(i => i.id === state.selectedId);
+  if (!inv) return '<p>Invoice not found.</p>';
+  const total = invoiceTotal(inv);
+
+  const statusButtons = [];
+  if (inv.status !== 'paid') statusButtons.push(`<button class="btn btn-success" data-status="paid">Mark as Paid</button>`);
+  if (inv.status !== 'unpaid') statusButtons.push(`<button class="btn btn-warning" data-status="unpaid">Mark as Unpaid</button>`);
+  if (inv.status !== 'delayed') statusButtons.push(`<button class="btn btn-danger" data-status="delayed">Mark as Delayed</button>`);
+
+  return `
+    <button class="back-btn" data-action="back">&larr; Back to invoices</button>
+    <div class="detail-header">
+      <div>
+        <div class="detail-title">${inv.id}</div>
+        <span class="badge badge-${inv.status}" style="margin-top:8px;display:inline-block;">${inv.status}</span>
+      </div>
+      <div class="detail-actions">
+        ${statusButtons.join('')}
+        <button class="btn btn-secondary" data-action="edit">Edit</button>
+        <button class="btn btn-danger" data-action="delete">Delete</button>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <h3>Invoice Details</h3>
+      <div class="detail-grid">
+        <div class="detail-field"><div class="label">Client</div><div class="value">${inv.client}</div></div>
+        <div class="detail-field"><div class="label">Email</div><div class="value">${inv.email || '—'}</div></div>
+        <div class="detail-field"><div class="label">Issue Date</div><div class="value">${fmtDate(inv.date)}</div></div>
+        <div class="detail-field"><div class="label">Due Date</div><div class="value">${fmtDate(inv.dueDate)}</div></div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <h3>Line Items</h3>
+      <div class="table-wrapper items-table">
+        <table>
+          <thead><tr><th>Description</th><th>Qty</th><th>Price</th><th style="text-align:right">Total</th></tr></thead>
+          <tbody>
+            ${inv.items.map(it => `
+              <tr style="cursor:default">
+                <td>${it.description}</td>
+                <td>${it.quantity}</td>
+                <td>${fmt(it.price)}</td>
+                <td style="text-align:right"><strong>${fmt(it.quantity * it.price)}</strong></td>
+              </tr>
+            `).join('')}
+            <tr style="cursor:default;background:#f8fafc">
+              <td colspan="3" style="text-align:right;font-weight:700;">Total</td>
+              <td style="text-align:right;font-weight:700;font-size:16px;">${fmt(total)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    ${inv.notes ? `<div class="detail-card"><h3>Notes</h3><p style="color:var(--text-secondary)">${inv.notes}</p></div>` : ''}
+  `;
+}
+
+// ── Modal ───────────────────────────────────────────────
+function renderModal() {
+  if (!state.modal) return '';
+
+  if (state.modal === 'delete') {
+    return `
+      <div class="modal-overlay" data-action="close-modal">
+        <div class="modal" style="max-width:400px" onclick="event.stopPropagation()">
+          <div class="modal-header"><h2>Delete Invoice</h2><button class="modal-close" data-action="close-modal">&times;</button></div>
+          <div class="confirm-body">
+            <p>Are you sure you want to delete invoice <strong>${state.selectedId}</strong>? This action cannot be undone.</p>
+            <div class="confirm-actions">
+              <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+              <button class="btn btn-danger" data-action="confirm-delete">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const inv = state.editingInvoice || { client: '', email: '', date: new Date().toISOString().split('T')[0], dueDate: '', status: 'unpaid', items: [{ description: '', quantity: 1, price: 0 }], notes: '' };
+  const isEdit = state.modal === 'edit';
+
+  return `
+    <div class="modal-overlay" data-action="close-modal">
+      <div class="modal" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h2>${isEdit ? 'Edit Invoice' : 'New Invoice'}</h2>
+          <button class="modal-close" data-action="close-modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-row">
+            <div class="form-group">
+              <label>Client Name *</label>
+              <input type="text" id="f-client" value="${inv.client}" placeholder="Company or person name" />
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" id="f-email" value="${inv.email || ''}" placeholder="client@example.com" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Issue Date *</label>
+              <input type="date" id="f-date" value="${inv.date}" />
+            </div>
+            <div class="form-group">
+              <label>Due Date *</label>
+              <input type="date" id="f-dueDate" value="${inv.dueDate}" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="unpaid" ${inv.status === 'unpaid' ? 'selected' : ''}>Unpaid</option>
+              <option value="paid" ${inv.status === 'paid' ? 'selected' : ''}>Paid</option>
+              <option value="delayed" ${inv.status === 'delayed' ? 'selected' : ''}>Delayed</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Line Items</label>
+            <div class="line-items" id="line-items">
+              <div class="line-item-row" style="margin-bottom:4px">
+                <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Description</span>
+                <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Qty</span>
+                <span style="font-size:12px;color:var(--text-secondary);font-weight:600">Price</span>
+                <span></span>
+              </div>
+              ${inv.items.map((it, idx) => `
+                <div class="line-item-row">
+                  <input type="text" class="item-desc" value="${it.description}" placeholder="Description" />
+                  <input type="number" class="item-qty" value="${it.quantity}" min="1" />
+                  <input type="number" class="item-price" value="${it.price}" min="0" step="0.01" />
+                  <button class="remove-item" data-remove="${idx}">&times;</button>
+                </div>
+              `).join('')}
+            </div>
+            <button class="add-item-btn" data-action="add-item">+ Add Line Item</button>
+          </div>
+          <div class="form-group">
+            <label>Notes</label>
+            <textarea id="f-notes" rows="3" placeholder="Additional notes...">${inv.notes || ''}</textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" data-action="close-modal">Cancel</button>
+          <button class="btn btn-primary" data-action="save-invoice">${isEdit ? 'Update' : 'Create'} Invoice</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── Events ──────────────────────────────────────────────
+function bindEvents() {
+  // Navigation
+  document.querySelectorAll('[data-nav]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.view = btn.dataset.nav;
+      state.selectedId = null;
+      render();
+    });
+  });
+
+  // Filter buttons
+  document.querySelectorAll('[data-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.filter = btn.dataset.filter;
+      render();
+    });
+  });
+
+  // Sort
+  document.querySelectorAll('[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const field = th.dataset.sort;
+      if (state.sortField === field) {
+        state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
+      } else {
+        state.sortField = field;
+        state.sortDir = 'asc';
+      }
+      render();
+    });
+  });
+
+  // Search
+  const searchBox = document.querySelector('[data-action="search"]');
+  if (searchBox) {
+    searchBox.addEventListener('input', (e) => {
+      state.search = e.target.value;
+      render();
+      const box = document.querySelector('[data-action="search"]');
+      if (box) { box.focus(); box.selectionStart = box.selectionEnd = box.value.length; }
+    });
+  }
+
+  // Row click → detail
+  document.querySelectorAll('tr[data-id]').forEach(tr => {
+    tr.addEventListener('click', () => {
+      state.selectedId = tr.dataset.id;
+      state.view = 'detail';
+      render();
+    });
+  });
+
+  // Actions
+  document.querySelectorAll('[data-action]').forEach(el => {
+    const action = el.dataset.action;
+
+    if (action === 'create') {
+      el.addEventListener('click', () => {
+        state.modal = 'create';
+        state.editingInvoice = null;
+        render();
+      });
+    }
+    if (action === 'edit') {
+      el.addEventListener('click', () => {
+        state.modal = 'edit';
+        state.editingInvoice = JSON.parse(JSON.stringify(state.invoices.find(i => i.id === state.selectedId)));
+        render();
+      });
+    }
+    if (action === 'delete') {
+      el.addEventListener('click', () => {
+        state.modal = 'delete';
+        render();
+      });
+    }
+    if (action === 'back') {
+      el.addEventListener('click', () => {
+        state.view = 'list';
+        state.selectedId = null;
+        render();
+      });
+    }
+    if (action === 'close-modal') {
+      el.addEventListener('click', () => {
+        state.modal = null;
+        state.editingInvoice = null;
+        render();
+      });
+    }
+    if (action === 'confirm-delete') {
+      el.addEventListener('click', () => {
+        state.invoices = state.invoices.filter(i => i.id !== state.selectedId);
+        saveInvoices(state.invoices);
+        state.modal = null;
+        state.view = 'list';
+        state.selectedId = null;
+        render();
+      });
+    }
+    if (action === 'save-invoice') {
+      el.addEventListener('click', saveInvoice);
+    }
+    if (action === 'add-item') {
+      el.addEventListener('click', () => {
+        const container = document.getElementById('line-items');
+        const rows = container.querySelectorAll('.line-item-row');
+        const idx = rows.length - 1; // subtract header row
+        const div = document.createElement('div');
+        div.className = 'line-item-row';
+        div.innerHTML = `
+          <input type="text" class="item-desc" value="" placeholder="Description" />
+          <input type="number" class="item-qty" value="1" min="1" />
+          <input type="number" class="item-price" value="0" min="0" step="0.01" />
+          <button class="remove-item" data-remove="${idx}">&times;</button>
+        `;
+        container.appendChild(div);
+        div.querySelector('.remove-item').addEventListener('click', () => div.remove());
+      });
+    }
+  });
+
+  // Remove item buttons
+  document.querySelectorAll('.remove-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const rows = document.querySelectorAll('#line-items .line-item-row');
+      if (rows.length <= 2) return; // keep at least 1 item (+ header)
+      btn.closest('.line-item-row').remove();
+    });
+  });
+
+  // Status change buttons
+  document.querySelectorAll('[data-status]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const inv = state.invoices.find(i => i.id === state.selectedId);
+      if (inv) {
+        inv.status = btn.dataset.status;
+        saveInvoices(state.invoices);
+        render();
+      }
+    });
+  });
+}
+
+function saveInvoice() {
+  const client = document.getElementById('f-client').value.trim();
+  const email = document.getElementById('f-email').value.trim();
+  const date = document.getElementById('f-date').value;
+  const dueDate = document.getElementById('f-dueDate').value;
+  const status = document.getElementById('f-status').value;
+  const notes = document.getElementById('f-notes').value.trim();
+
+  if (!client || !date || !dueDate) {
+    alert('Please fill in all required fields (Client, Issue Date, Due Date).');
+    return;
+  }
+
+  const itemRows = document.querySelectorAll('#line-items .line-item-row:not(:first-child)');
+  const items = [];
+  itemRows.forEach(row => {
+    const desc = row.querySelector('.item-desc').value.trim();
+    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
+    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    if (desc && qty > 0) items.push({ description: desc, quantity: qty, price: price });
+  });
+
+  if (items.length === 0) {
+    alert('Please add at least one line item with a description and quantity.');
+    return;
+  }
+
+  if (state.modal === 'edit') {
+    const inv = state.invoices.find(i => i.id === state.selectedId);
+    if (inv) {
+      Object.assign(inv, { client, email, date, dueDate, status, items, notes });
+    }
+  } else {
+    state.invoices.push({ id: generateId(), client, email, date, dueDate, status, items, notes });
+  }
+
+  saveInvoices(state.invoices);
+  state.modal = null;
+  state.editingInvoice = null;
+  if (state.modal !== 'edit' && state.view !== 'detail') state.view = 'list';
+  render();
+}
+
+// ── Initialize ──────────────────────────────────────────
+render();
+</script>
+
+</body>
+</html>
