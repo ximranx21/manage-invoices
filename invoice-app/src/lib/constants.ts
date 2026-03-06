@@ -1,4 +1,4 @@
-import type { InvoiceStatus, Currency, PaymentType } from "@/lib/types";
+import type { InvoiceStatus, Currency, PaymentType, QuoteStatus } from "@/lib/types";
 
 export const statusConfig: Record<
   InvoiceStatus,
@@ -28,3 +28,20 @@ export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
   bank_transfer: "Bank Transfer",
   check: "Check",
 };
+
+export const quoteStatusConfig: Record<
+  QuoteStatus,
+  { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+> = {
+  draft: { label: "Draft", variant: "secondary" },
+  sent: { label: "Sent", variant: "outline" },
+  accepted: { label: "Accepted", variant: "default" },
+  declined: { label: "Declined", variant: "destructive" },
+};
+
+export const QUOTE_VALIDITY_OPTIONS = [
+  { value: 15, label: "15 days" },
+  { value: 30, label: "30 days" },
+  { value: 60, label: "60 days" },
+  { value: 90, label: "90 days" },
+] as const;

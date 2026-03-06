@@ -153,3 +153,53 @@ export interface StockAlert {
   article: Article;
   alertType: "rupture" | "low_stock";
 }
+
+// ── Quotes (Devis) ───────────────────────────────
+
+export type QuoteStatus = "draft" | "sent" | "accepted" | "declined";
+
+export interface QuoteItem {
+  id: string;
+  quote_id: string;
+  article_id: string | null;
+  description: string;
+  quantity: number;
+  price: number;
+  tax_rate: number;
+}
+
+export interface Quote {
+  id: string;
+  user_id: string;
+  quote_number: string;
+  client: string;
+  email: string;
+  client_id: string | null;
+  date: string;
+  expiry_date: string;
+  status: QuoteStatus;
+  notes: string | null;
+  currency: Currency;
+  invoice_id: string | null;
+  created_at: string;
+  updated_at: string;
+  quote_items?: QuoteItem[];
+}
+
+export interface QuoteFormData {
+  client: string;
+  email: string;
+  client_id: string | null;
+  date: string;
+  expiry_date: string;
+  expiry_days: number;
+  notes: string;
+  currency: Currency;
+  items: {
+    description: string;
+    quantity: number;
+    price: number;
+    article_id: string | null;
+    tax_rate: number;
+  }[];
+}
